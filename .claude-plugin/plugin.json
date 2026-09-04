@@ -1,0 +1,14 @@
+{
+  "name": "simple-lang-skill",
+  "version": "1.0.0",
+  "description": "ASD-STE100 (Simplified Technical English) and Информационный стиль (Infostyle) skills for Claude Code and agent harnesses",
+  "author": {
+    "name": "Sam Krew",
+    "url": "https://github.com/samkrew"
+  },
+  "repository": "https://github.com/samkrew/simple-lang-skill",
+  "license": "Unlicense",
+  "skills": [
+    "./skills/"
+  ]
+}
