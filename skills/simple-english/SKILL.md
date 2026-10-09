@@ -41,6 +41,8 @@ Start each instruction with a command verb. Do not describe; instruct.
 | You might want to consider checking the logs. | Check the logs. |
 | Deletion of the cache can be performed. | Delete the cache. |
 
+If a step is optional, mark it explicitly. Do not use modals for this: "Optional: enable the cache."
+
 ### D2. Use the active voice
 
 Name the agent of each action. Passive voice hides the agent and adds words.
@@ -91,7 +93,7 @@ Prohibited: "please note that", "it is worth mentioning", "as you can see", "bas
 | BAD | GOOD |
 |-----|------|
 | Please note that in order to run the tests, you basically just need to execute the command below. | To run the tests, run: |
-| It is worth mentioning that this function actually mutates the input. | Warning: this function mutates the input. |
+| It is worth mentioning that this function actually mutates the input. | Caution: this function mutates the input. |
 
 ### D7. Use one word for one meaning (controlled vocabulary)
 
@@ -123,7 +125,15 @@ Exception: if a word is part of an official API, command, or product name, keep 
 |-----|------|
 | Run the migration script. Note: this drops the temp tables. | Warning: the migration script drops the temp tables. Make a backup first. Then run the migration script. |
 
-Format: `Warning:` for risk of damage or data loss. `Note:` for helpful context only. Never put risk information in a "Note".
+Severity levels (the same in all three skills):
+
+| Label | Use for |
+|---|---|
+| `Warning:` | Risk of injury, loss of data, money, or access, or a security breach |
+| `Caution:` | Risk of failure, downtime, degradation, or extra work |
+| `Note:` | Useful context without risk |
+
+Never put risk information in a "Note".
 
 ### D10. Prefer lists and tables over prose
 
@@ -177,7 +187,7 @@ Run this checklist on every English text before you finish:
 - [ ] No noun cluster longer than 3 words.
 - [ ] No prohibited filler words (D6 list).
 - [ ] One term per concept across the whole text (D7 table).
-- [ ] Warnings appear before the related instruction, marked `Warning:`.
+- [ ] Warnings and cautions appear before the related instruction, with the correct label from D9.
 - [ ] 4+ inline items converted to a list; ordered steps numbered.
 - [ ] All values exact, with units; all abbreviations defined at first use.
 - [ ] Nothing technically necessary was deleted for brevity.

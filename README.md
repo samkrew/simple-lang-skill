@@ -61,9 +61,9 @@ Both standards attack the same problem: **text that makes the reader work harder
 
 1. **One word — one meaning.** In STE, each approved word has exactly one part of speech and one definition (`follow` means "come after", never "obey"). In Infostyle, a word that can be removed without loss of meaning must be removed.
 2. **Verbs carry the sentence.** Active voice, imperative mood for instructions. Nominalizations (`осуществление`, `implementation of the verification`) are compressed dead verbs — resurrect them (`verify`, `проверить`).
-3. **Short sentences, one idea each.** STE hard limits: **≤ 20 words** per procedural sentence, **≤ 25 words** per descriptive sentence, **≤ 6 sentences** per paragraph. Infostyle limit: **≤ 15 words** per instruction, genitive chains ≤ 2 words. If a sentence needs a second read, split it.
+3. **Short sentences, one idea each.** STE hard limits: **≤ 20 words** per procedural sentence, **≤ 25 words** per descriptive sentence, **≤ 6 sentences** per paragraph. Infostyle limits: **≤ 15 words** per instruction, **≤ 20 words** per descriptive sentence, genitive chains ≤ 2 words. If a sentence needs a second read, split it.
 4. **Facts, not evaluations.** "Fast" is an opinion. "Responds in 40 ms" is a fact. Delete intensifiers (`very`, `крайне`, `максимально`) — they add emphasis by subtracting trust.
-5. **Warnings before actions.** State the caution, then the instruction. Never bury a safety condition after the step that needs it.
+5. **Warnings before actions.** State the caution, then the instruction. Never bury a safety condition after the step that needs it. All three skills use one scale: `WARNING`/`ОСТОРОЖНО` (injury, loss of data, money, or access) > `CAUTION`/`ВНИМАНИЕ` (failure, downtime, extra work) > `NOTE`/`ПРИМЕЧАНИЕ` (context only).
 6. **The reader owes you nothing.** No filler, no throat-clearing, no "as everyone knows". Respect is measured in the reader's saved seconds.
 
 **What these skills do NOT do:** they do not dumb text down, strip technical terms, or flatten tone into robotese. Domain terminology is kept. Structure and precision are added. Only noise is removed.
@@ -107,11 +107,13 @@ Paste into `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, or any agent system prompt.
 
 - Write in plain technical English (ASD-STE100 profile).
 - Maximum 20 words per instruction. One instruction per sentence.
-- Active voice only. Imperative mood for all procedures.
+- Active voice. Imperative mood for all procedures.
+- Put the condition first: "If X, do Y."
 - Zero conversational filler: no greetings, no "Certainly", no "Hope this helps",
   no "Let's dive in", no apologies, no self-reference.
 - Place warnings BEFORE the action they protect.
 - State facts and metrics, not adjectives: "40 ms", not "fast".
+- Accuracy first: never delete a necessary fact to make text shorter.
 - One term per concept. Do not vary vocabulary for style.
 - Answer first. Explanation after, only if needed.
 - If the user writes in Russian, apply the Russian protocol
@@ -125,7 +127,8 @@ Paste into `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, or any agent system prompt.
 
 - Пишите в информационном стиле (простой русский).
 - Максимум 15 слов на инструкцию. Одна инструкция — одно предложение.
-- Только действительный залог. Повелительное наклонение для процедур.
+- Действительный залог. Повелительное наклонение для процедур.
+- Условие — в начале: «Если X, сделайте Y».
 - Ноль разговорного мусора: без приветствий, без «Конечно», без
   «Надеюсь, это поможет», без «Давайте разберёмся», без извинений.
 - Глаголы действия вместо отглагольных существительных:
@@ -133,6 +136,7 @@ Paste into `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, or any agent system prompt.
 - Цепочки родительного падежа — не более двух звеньев.
 - Предупреждение — ПЕРЕД действием, которое оно защищает.
 - Факты и метрики вместо прилагательных: «40 мс», не «быстро».
+- Точность важнее краткости: не удаляйте нужный факт ради сокращения.
 - Один термин на одно понятие. Не варьируйте лексику ради стиля.
 - Сначала ответ. Пояснение — после, только если нужно.
 - Если пользователь пишет на английском, примените английский

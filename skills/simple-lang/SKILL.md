@@ -20,7 +20,7 @@ Two national styles. One discipline. Each core governs its language. The invaria
 | Rule | Requirement |
 |---|---|
 | Sentence length | ≤ 20 words per procedural instruction. ≤ 25 words per descriptive sentence. |
-| Voice | Active voice only. Named agent performs a named action. |
+| Voice | Active voice. Named agent performs a named action. Passive only in descriptions, when the agent is unknown or unimportant. Never in instructions. |
 | Mood | Imperative for all procedures: "Remove the bolt." Not: "The bolt should be removed." |
 | Vocabulary | Controlled: one word = one meaning. Use "start", not "initiate/commence/kick off". |
 | Verb forms | Simple tenses only. No gerund chains, no perfect continuous. |
@@ -36,14 +36,15 @@ Two national styles. One discipline. Each core governs its language. The invaria
 
 | Правило | Требование |
 |---|---|
-| Длина фразы | ≤ 15 слов на инструкцию. |
-| Залог | Действительный залог. Субъект действует. "Скрипт удаляет файл", не "файл удаляется скриптом". |
+| Длина фразы | ≤ 15 слов на инструкцию. ≤ 20 слов на описательное предложение. |
+| Залог | Действительный залог. Субъект действует. "Скрипт удаляет файл", не "файл удаляется скриптом". Страдательный — только в описании, если деятель неизвестен или не важен, не чаще раза на абзац. В инструкциях — никогда. |
+| Порядок слов | Прямой: подлежащее → сказуемое → дополнение. «Скрипт создаёт файл», не «Скриптом создаётся файл». |
 | Глаголы | Глаголы действия вместо отглагольных существительных: "проверить", не "осуществить проверку". |
 | Канцелярит | Запрещён: «осуществлять», «производить», «данный», «является», «в рамках», «в целях», «имеет место». |
 | Родительный падеж | ≤ 2 звена в цепочке. "Настройка прав доступа сервера базы данных отдела" — переписать. |
 | Наклонение | Повелительное для процедур: «Остановите сервис». Не: «Необходимо остановить сервис». |
 | Вводные слова | Удалить: «следует отметить», «как известно», «в целом», «по сути». |
-| Оценки | Факты вместо оценок: «ответ за 40 мс», не «быстый ответ». |
+| Оценки | Факты вместо оценок: «ответ за 40 мс», не «быстрый ответ». |
 
 **Шаблон инструкции:** `<Глагол> <объект> <условие>.`
 - ✅ «Остановите сервис перед правкой конфига.»
@@ -83,15 +84,27 @@ Every procedural step = one imperative verb, second person, no modal hedging.
 - EN: "Run the migration." Not: "You might want to consider running the migration."
 - RU: «Запустите миграцию.» Не: «Можно было бы запустить миграцию.»
 
+If a step is optional, mark it explicitly. Do not use modals for this.
+- EN: "Optional: enable the cache."
+- RU: «Необязательно: включите кэш.»
+
 ### 2.3 Warnings Before Actions
 
 Place warnings, cautions, and preconditions **before** the instruction they protect. Never after.
 
 - ✅ EN: "**WARNING:** This deletes all data. Run `db:reset`."
-- ✅ RU: «**ВНИМАНИЕ:** команда удаляет все данные. Запустите `db:reset`.»
+- ✅ RU: «**ОСТОРОЖНО:** команда удаляет все данные. Запустите `db:reset`.»
 - ❌ "Run `db:reset`. Note: this deletes all data."
 
-Severity order: `WARNING/ВНИМАНИЕ` (injury, data loss) > `CAUTION/ОСТОРОЖНО` (damage, degradation) > `NOTE/ПРИМЕЧАНИЕ` (context).
+Severity levels (the same in all three skills):
+
+| Level | EN | RU | Use for |
+|---|---|---|---|
+| 1 | `WARNING` | `ОСТОРОЖНО` | Risk of injury, loss of data, money, or access, or a security breach |
+| 2 | `CAUTION` | `ВНИМАНИЕ` | Risk of failure, downtime, degradation, or extra work |
+| 3 | `NOTE` | `ПРИМЕЧАНИЕ` | Useful context without risk |
+
+Never put risk information in a `NOTE` / `ПРИМЕЧАНИЕ`.
 
 ### 2.4 Data and Facts Over Adjectives
 
@@ -119,6 +132,21 @@ One sentence carries one action. Split compound instructions.
 - No sentence starts with "There is/are" or «Существует/Имеется».
 - Terminology is frozen per document: one concept = one term in each language.
 
+### 2.7 Accuracy Before Brevity
+
+Priority order: accuracy > clarity > brevity.
+- Never delete necessary technical information to make a sentence shorter.
+- If a limit conflicts with accuracy, keep the fact and restructure the sentence.
+- If the source is ambiguous, list the ambiguity as an open question. Do not invent a precise value.
+
+### 2.8 Explicit Conditions First
+
+Put the condition before the action. One condition per sentence.
+- EN: "If the config changed, restart the server." Not: "Restart the server if the config changed."
+- RU: «Если в логах есть ошибка, перезапустите сервис.» Не: «Перезапустите сервис в случае обнаружения ошибки.»
+
+Never use vague conditions: "as needed", "where applicable", "if necessary" / «при необходимости», «по возможности», «в случае возникновения». State the exact condition or delete it.
+
 ---
 
 ## 3. Agent Persona & System Prompt Injection Snippets
@@ -132,11 +160,13 @@ Copy the block verbatim into `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, or a syst
 
 - Write in plain technical English (ASD-STE100 profile).
 - Maximum 20 words per instruction. One instruction per sentence.
-- Active voice only. Imperative mood for all procedures.
+- Active voice. Imperative mood for all procedures.
+- Put the condition first: "If X, do Y."
 - Zero conversational filler: no greetings, no "Certainly", no "Hope this helps",
   no "Let's dive in", no apologies, no self-reference.
 - Place warnings BEFORE the action they protect.
 - State facts and metrics, not adjectives: "40 ms", not "fast".
+- Accuracy first: never delete a necessary fact to make text shorter.
 - One term per concept. Do not vary vocabulary for style.
 - Answer first. Explanation after, only if needed.
 - If the user writes in Russian, apply the Russian protocol
@@ -150,7 +180,8 @@ Copy the block verbatim into `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, or a syst
 
 - Пишите в информационном стиле (простой русский).
 - Максимум 15 слов на инструкцию. Одна инструкция — одно предложение.
-- Только действительный залог. Повелительное наклонение для процедур.
+- Действительный залог. Повелительное наклонение для процедур.
+- Условие — в начале: «Если X, сделайте Y».
 - Ноль разговорного мусора: без приветствий, без «Конечно», без
   «Надеюсь, это поможет», без «Давайте разберёмся», без извинений.
 - Глаголы действия вместо отглагольных существительных:
@@ -158,6 +189,7 @@ Copy the block verbatim into `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, or a syst
 - Цепочки родительного падежа — не более двух звеньев.
 - Предупреждение — ПЕРЕД действием, которое оно защищает.
 - Факты и метрики вместо прилагательных: «40 мс», не «быстро».
+- Точность важнее краткости: не удаляйте нужный факт ради сокращения.
 - Один термин на одно понятие. Не варьируйте лексику ради стиля.
 - Сначала ответ. Пояснение — после, только если нужно.
 - Если пользователь пишет на английском, примените английский
@@ -181,7 +213,7 @@ Goal: EN and RU versions carry identical meaning, identical structure, identical
 
 1. **Extract the action skeleton.** Reduce the source sentence to `verb + object + condition`.
 2. **Translate the skeleton, not the sentence.** Render the skeleton with the target core's approved verb pattern.
-3. **Re-apply invariants.** Check length limit (EN ≤ 20 / RU ≤ 15 words), imperative mood, warning placement.
+3. **Re-apply invariants.** Check length limits (instructions: EN ≤ 20 / RU ≤ 15 words; descriptions: EN ≤ 25 / RU ≤ 20 words), imperative mood, condition placement, warning placement and level.
 4. **Verify term map.** Every frozen term maps 1:1 via the document glossary. No synonyms.
 5. **Parity check.** Count instructions, warnings, and metrics in both versions. Counts must match.
 
@@ -216,15 +248,17 @@ Run this checklist on every text before delivery. All items are blocking.
 
 - [ ] Answer or action appears in the first sentence.
 - [ ] One instruction per sentence.
-- [ ] EN sentences ≤ 20 words (procedures); RU ≤ 15 words.
+- [ ] EN: instructions ≤ 20 words, descriptions ≤ 25 words. RU: instructions ≤ 15 words, descriptions ≤ 20 words.
 - [ ] Paragraphs ≤ 6 sentences.
 - [ ] Sequences of 3+ items use lists; ordered steps use numbers.
+- [ ] Conditions come first ("If X, …" / «Если X, …»). No vague conditions (Section 2.8).
 
 ### 5.2 Voice and Mood
 
-- [ ] Zero passive voice (EN). Ноль страдательного залога (RU).
+- [ ] No passive voice in instructions. Passive in descriptions only when the agent is unknown or unimportant.
+- [ ] RU: direct word order (подлежащее → сказуемое → дополнение).
 - [ ] All procedures use the imperative.
-- [ ] No modal hedging: no "should/might/could consider", no «следует/можно было бы/необходимо».
+- [ ] No modal hedging: no "should/might/could consider", no «следует/можно было бы/необходимо». Optional steps are marked "Optional:" / «Необязательно:».
 
 ### 5.3 Filler and Noise
 
@@ -237,8 +271,9 @@ Run this checklist on every text before delivery. All items are blocking.
 
 - [ ] Every evaluative adjective replaced by a metric or deleted.
 - [ ] All warnings placed before the actions they protect.
-- [ ] Severity labels used correctly (WARNING > CAUTION > NOTE).
+- [ ] Severity labels match the table in Section 2.3 (WARNING/ОСТОРОЖНО > CAUTION/ВНИМАНИЕ > NOTE/ПРИМЕЧАНИЕ).
 - [ ] Numbers, units, commands, and code literals verified against the source.
+- [ ] No necessary technical fact deleted for brevity (Section 2.7).
 
 ### 5.5 Terminology and Parity (bilingual documents)
 
@@ -262,4 +297,4 @@ Run this checklist on every text before delivery. All items are blocking.
 1. This skill governs prose. Code style rules govern code.
 2. Language-specific core (Section 1) overrides invariants only where marked; by default, invariants win.
 3. External style guides (client brand, legal boilerplate) override this skill only with an explicit note in the document header.
-4. When in doubt: shorter, active, imperative, measured.
+4. When in doubt: accurate first, then shorter, active, imperative, measured.
