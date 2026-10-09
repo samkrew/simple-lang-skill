@@ -8,8 +8,10 @@ description: Unified bilingual language enforcement skill for technical writing 
 Master skill for bilingual (EN/RU) technical communication. Apply to: agent output, system prompts, documentation, UI copy, commit messages, runbooks, translations.
 
 simple-lang does not work alone. It holds the cross-lingual layer: invariants, translation parity, injection blocks. The full language rules live in two sibling skills:
-- `simple-english` — ASD-STE100 directives D1–D11 for English text.
-- `simple-russian` — Информационный стиль directives D1–D11 for Russian text.
+- `simple-english` — shared directives D1–D11 plus English-only directives E1–E3.
+- `simple-russian` — shared directives D1–D11 plus Russian-only directives R1–R5.
+
+A shared ID (D1–D11) means the same rule in both language skills. E- and R-directives cover features of one language only. Cite every violation by its ID.
 
 **Rule of use:** Load this skill before you write, review, or translate technical text. Then run Section 0. All sub-rules below are mandatory unless a language-specific rule overrides them.
 
@@ -53,7 +55,7 @@ Two national styles. One discipline. Each core governs its language. The invaria
 | Voice | Active voice. Named agent performs a named action. Passive only in descriptions, when the agent is unknown or unimportant. Never in instructions. |
 | Mood | Imperative for all procedures: "Remove the bolt." Not: "The bolt should be removed." |
 | Vocabulary | Controlled: one word = one meaning. Use "start", not "initiate/commence/kick off". |
-| Verb forms | Simple tenses only. No gerund chains, no perfect continuous. |
+| Verb forms | Simple tenses only. No gerund chains, no perfect continuous. No phrasal verbs (E2). |
 | Paragraphs | ≤ 6 sentences. One topic per paragraph. |
 | Noun clusters | ≤ 3 nouns in a row. Break longer clusters with prepositions. |
 | Articles | Keep articles ("the", "a"). Telegraphic style is prohibited. |
@@ -75,6 +77,7 @@ Two national styles. One discipline. Each core governs its language. The invaria
 | Наклонение | Повелительное для процедур: «Остановите сервис». Не: «Необходимо остановить сервис». |
 | Вводные слова | Удалить: «следует отметить», «как известно», «в целом», «по сути». |
 | Оценки | Факты вместо оценок: «ответ за 40 мс», не «быстрый ответ». |
+| Деепричастия и вид | В инструкциях без деепричастных оборотов (R4). Совершенный вид в разовых командах: «Откройте», не «Открывайте» (R5). |
 
 **Шаблон инструкции:** `<Глагол> <объект> <условие>.`
 - ✅ «Остановите сервис перед правкой конфига.»
@@ -90,7 +93,7 @@ When the two cores conflict on a shared document, the language of the target sen
 
 These rules apply to both languages, always.
 
-### 2.1 Zero Conversational Filler (Universal Stop-Words)
+### 2.1 Zero Conversational Filler (Universal Stop-Words) — D6
 
 Delete on sight. Never generate.
 
@@ -108,7 +111,7 @@ Delete on sight. Never generate.
 
 Rule: if deleting the phrase does not change the meaning, delete the phrase.
 
-### 2.2 Direct Imperative for Procedures
+### 2.2 Direct Imperative for Procedures — D1
 
 Every procedural step = one imperative verb, second person, no modal hedging.
 - EN: "Run the migration." Not: "You might want to consider running the migration."
@@ -118,7 +121,7 @@ If a step is optional, mark it explicitly. Do not use modals for this.
 - EN: "Optional: enable the cache."
 - RU: «Необязательно: включите кэш.»
 
-### 2.3 Warnings Before Actions
+### 2.3 Warnings Before Actions — D9
 
 Place warnings, cautions, and preconditions **before** the instruction they protect. Never after.
 
@@ -136,7 +139,7 @@ Severity levels (the same in all three skills):
 
 Never put risk information in a `NOTE` / `ПРИМЕЧАНИЕ`.
 
-### 2.4 Data and Facts Over Adjectives
+### 2.4 Data and Facts Over Adjectives — D8
 
 Replace every evaluative adjective with a measurement or delete it.
 
@@ -149,27 +152,29 @@ Replace every evaluative adjective with a measurement or delete it.
 
 If no metric exists, state the fact without the adjective.
 
-### 2.5 One Instruction = One Sentence
+### 2.5 One Instruction = One Sentence — D4
 
 One sentence carries one action. Split compound instructions.
 - ❌ "Stop the service, edit the config, and restart it after you verify the port."
 - ✅ "Stop the service. Edit the config. Verify the port. Restart the service."
 
-### 2.6 Structural Invariants
+Exception: two actions that you cannot separate physically. "Press and hold the button for 3 seconds." / «Нажмите и удерживайте кнопку 3 секунды».
 
-- Lists for sequences of 3+ items. Tables for enumerable facts.
-- Numbered lists only when order matters.
+### 2.6 Structural Invariants — D10, D7
+
+- Lists and tables follow D10: 3+ steps → numbered list. 3+ items with details → bulleted list. Items with 2+ attributes each → table. Up to 3 short plain items may stay inline; 4+ → list.
+- Numbered lists only when order matters. List nesting ≤ 2 levels.
 - No sentence starts with "There is/are" or «Существует/Имеется».
 - Terminology is frozen per document: one concept = one term in each language.
 
-### 2.7 Accuracy Before Brevity
+### 2.7 Accuracy Before Brevity — Priority of rules
 
 Priority order: accuracy > clarity > brevity.
 - Never delete necessary technical information to make a sentence shorter.
 - If a limit conflicts with accuracy, keep the fact and restructure the sentence.
 - If the source is ambiguous, list the ambiguity as an open question. Do not invent a precise value.
 
-### 2.8 Explicit Conditions First
+### 2.8 Explicit Conditions First — D5
 
 Put the condition before the action. One condition per sentence.
 - EN: "If the config changed, restart the server." Not: "Restart the server if the config changed."
@@ -272,7 +277,7 @@ If parity fails, fix the deviant version. Do not "average" the two.
 
 ## 5. Unified Review & Linter Checklist
 
-Run this checklist on every text before delivery. Also run the checklist of each loaded language skill. All items are blocking.
+Run this checklist on every text before delivery. Also run the checklist of each loaded language skill. All items are blocking. Cite each violation by its directive ID (D1–D11, E1–E3, R1–R5).
 
 ### 5.1 Structure
 
@@ -280,7 +285,7 @@ Run this checklist on every text before delivery. Also run the checklist of each
 - [ ] One instruction per sentence.
 - [ ] EN: instructions ≤ 20 words, descriptions ≤ 25 words. RU: instructions ≤ 15 words, descriptions ≤ 20 words.
 - [ ] Paragraphs ≤ 6 sentences.
-- [ ] Sequences of 3+ items use lists; ordered steps use numbers.
+- [ ] Lists and tables follow the D10 thresholds; ordered steps use numbers; nesting ≤ 2 levels.
 - [ ] Conditions come first ("If X, …" / «Если X, …»). No vague conditions (Section 2.8).
 
 ### 5.2 Voice and Mood

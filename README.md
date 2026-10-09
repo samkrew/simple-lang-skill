@@ -55,6 +55,32 @@ rm -rf /tmp/simple-lang-skill
 | `simple-english` | English | Enforces ASD-STE100: one word — one meaning, approved verbs, active voice, short sentences (≤ 20 words for instructions), procedural clarity. |
 | `simple-russian` | Russian | Enforces Информационный стиль: no stop-words, no bureaucratese (канцелярит), active voice, facts over evaluations, verbs over verbal nouns. |
 
+### Directive map
+
+`simple-english` and `simple-russian` share directives D1–D11: the same ID means the same rule in both languages. Each skill adds directives for features of its own language only.
+
+| ID | Rule | English | Russian |
+|---|---|---|---|
+| D1 | Imperative for instructions | ✓ | ✓ |
+| D2 | Active voice | ✓ | ✓ |
+| D3 | Verbs, not nominalizations | ✓ | ✓ |
+| D4 | One action per sentence | ✓ | ✓ |
+| D5 | Explicit conditions first | ✓ | ✓ |
+| D6 | No filler | ✓ | ✓ |
+| D7 | One term per concept | ✓ | ✓ |
+| D8 | Facts and exact values | ✓ | ✓ |
+| D9 | Warnings before actions | ✓ | ✓ |
+| D10 | Lists and tables | ✓ | ✓ |
+| D11 | Error messages: what, why, what to do | ✓ | ✓ |
+| E1 | Noun clusters ≤ 3 words | ✓ | — (see R2) |
+| E2 | Simple verb forms, no phrasal verbs | ✓ | — |
+| E3 | Articles, contractions, word classes | ✓ | — |
+| R1 | No bureaucratese (канцелярит) | — | ✓ |
+| R2 | Genitive chains ≤ 2 words | — (see E1) | ✓ |
+| R3 | Direct word order | — | ✓ |
+| R4 | No adverbial participle phrases (деепричастные обороты) in instructions | — | ✓ |
+| R5 | Verb aspect and one command form | — | ✓ |
+
 ---
 
 ## Core Doctrine & Philosophy
