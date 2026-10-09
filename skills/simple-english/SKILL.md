@@ -197,4 +197,4 @@ Run this checklist on every English text before you finish:
 - When you WRITE: apply all directives during generation, not after.
 - When you REVIEW: quote each violating sentence, name the directive (D1–D11), and give the corrected version in a BAD/GOOD pair.
 - When you REWRITE: keep all technical facts. If the source is ambiguous, list the ambiguity as an open question — do not invent a precise value.
-- For bilingual work (English + Russian), also load `simple-russian` and `simple-lang`.
+- For bilingual work (English + Russian) or translation, also load `simple-lang`. It loads `simple-russian` and adds the parity rules.

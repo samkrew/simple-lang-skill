@@ -1,17 +1,47 @@
 ---
 name: simple-lang
-description: Unified bilingual language enforcement skill for technical writing and AI agents. Combines ASD-STE100 (Simple English) and Информационный стиль (Простой русский). Enforces strict brevity, active voice, zero conversational filler, direct imperative commands, and cross-lingual parity. Triggers on bilingual review, prompt design, translation, style enforcement, or agent persona setup.
+description: Unified bilingual language enforcement skill for technical writing and AI agents. Router for simple-english and simple-russian — loads the language skill that the text needs; does not work alone. Combines ASD-STE100 (Simple English) and Информационный стиль (Простой русский). Enforces strict brevity, active voice, zero conversational filler, direct imperative commands, and cross-lingual parity. Triggers on bilingual review, prompt design, translation, style enforcement, or agent persona setup.
 ---
 
 # simple-lang — Bilingual Technical Language Controller
 
 Master skill for bilingual (EN/RU) technical communication. Apply to: agent output, system prompts, documentation, UI copy, commit messages, runbooks, translations.
 
-**Rule of use:** Load this skill before you write, review, or translate technical text. All sub-rules below are mandatory unless a language-specific rule overrides them.
+simple-lang does not work alone. It holds the cross-lingual layer: invariants, translation parity, injection blocks. The full language rules live in two sibling skills:
+- `simple-english` — ASD-STE100 directives D1–D11 for English text.
+- `simple-russian` — Информационный стиль directives D1–D11 for Russian text.
+
+**Rule of use:** Load this skill before you write, review, or translate technical text. Then run Section 0. All sub-rules below are mandatory unless a language-specific rule overrides them.
+
+---
+
+## 0. Loading Protocol
+
+Run this protocol before you write, review, or translate text.
+
+1. Identify the language of each text that you write, review, or translate.
+2. Load the language skills that the task needs:
+
+| Task | Load |
+|---|---|
+| English text only | `simple-english` |
+| Russian text only | `simple-russian` |
+| Text in both languages, or translation EN ↔ RU | `simple-english` and `simple-russian` |
+| Copy a Section 3 injection block verbatim | Nothing |
+
+3. Load each skill once per session. If a later text is in the other language, load the second skill at that point.
+4. Use the load method of your harness:
+   - Claude Code: call the Skill tool with the skill name.
+   - Other agents: read `../simple-english/SKILL.md` or `../simple-russian/SKILL.md` relative to this file.
+5. If a language skill is not available, tell the user: "simple-lang requires simple-english and simple-russian. Install: `npx skills add samkrew/simple-lang-skill`." Then use Section 1 as the fallback. Mark the result as a partial check.
+
+Precedence: Section 2 invariants > loaded language skill > Section 1 summary.
 
 ---
 
 ## 1. The Dual-Core Doctrine
+
+Summary of the two language skills. Use it for orientation and as the fallback from Section 0, step 5. The full rules are in `simple-english` and `simple-russian`.
 
 Two national styles. One discipline. Each core governs its language. The invariants (Section 2) govern both.
 
@@ -242,7 +272,7 @@ If parity fails, fix the deviant version. Do not "average" the two.
 
 ## 5. Unified Review & Linter Checklist
 
-Run this checklist on every text before delivery. All items are blocking.
+Run this checklist on every text before delivery. Also run the checklist of each loaded language skill. All items are blocking.
 
 ### 5.1 Structure
 
@@ -295,6 +325,6 @@ Run this checklist on every text before delivery. All items are blocking.
 ## 6. Scope and Precedence
 
 1. This skill governs prose. Code style rules govern code.
-2. Language-specific core (Section 1) overrides invariants only where marked; by default, invariants win.
+2. Language-specific rules (Section 1 and the loaded language skills) override invariants only where marked; by default, invariants win.
 3. External style guides (client brand, legal boilerplate) override this skill only with an explicit note in the document header.
 4. When in doubt: accurate first, then shorter, active, imperative, measured.

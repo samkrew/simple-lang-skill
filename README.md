@@ -23,6 +23,8 @@ npx skills add samkrew/simple-lang-skill --skill simple-english
 npx skills add samkrew/simple-lang-skill --skill simple-russian
 ```
 
+`simple-lang` needs both language skills: it loads `simple-english` and `simple-russian` as needed. Do not install `simple-lang` alone — install the full pack.
+
 Install project-local (writes to `./.claude/skills/` instead of `~/.claude/skills/`):
 
 ```bash
@@ -49,7 +51,7 @@ rm -rf /tmp/simple-lang-skill
 
 | Skill | Language | Purpose |
 |---|---|---|
-| `simple-lang` | Bilingual | Master controller skill. Enforces universal cross-lingual invariants, ASD-STE100 for English, Infostyle for Russian, and translation parity. |
+| `simple-lang` | Bilingual | Router and controller. Loads `simple-english` and/or `simple-russian` for the language of the text, then adds the cross-lingual invariants and translation parity. Does not work alone. |
 | `simple-english` | English | Enforces ASD-STE100: one word — one meaning, approved verbs, active voice, short sentences (≤ 20 words for instructions), procedural clarity. |
 | `simple-russian` | Russian | Enforces Информационный стиль: no stop-words, no bureaucratese (канцелярит), active voice, facts over evaluations, verbs over verbal nouns. |
 
