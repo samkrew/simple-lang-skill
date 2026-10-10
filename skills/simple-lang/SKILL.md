@@ -1,335 +1,301 @@
 ---
 name: simple-lang
-description: Unified bilingual language enforcement skill for technical writing and AI agents. Router for simple-english and simple-russian — loads the language skill that the text needs; does not work alone. Combines ASD-STE100 (Simple English) and Информационный стиль (Простой русский). Enforces strict brevity, active voice, zero conversational filler, direct imperative commands, and cross-lingual parity. Triggers on bilingual review, prompt design, translation, style enforcement, or agent persona setup.
+description: >-
+  Plain EN/RU prose: simplify, rewrite, review, translate. Based on ASD-STE100
+  for English and информационный стиль for Russian. Not for marketing, pitch,
+  or creative copy. Triggers: «упрости текст», «перепиши», «убери канцелярит»,
+  «примени STE», «убери двусмысленность», «переведи», «напиши инструкцию»,
+  «перепиши по-русски», "plain English", "STE", "disambiguate". Use for docs,
+  runbooks, instructions, UI text, error messages, commit messages, Jira
+  comments, and Slack messages. Enforces imperative instructions, active voice,
+  no filler, exact values, warnings before actions, one term per concept, kept
+  modality, and EN/RU parity.
 ---
 
-# simple-lang — Bilingual Technical Language Controller
+# simple-lang — plain technical English and Russian
 
-Master skill for bilingual (EN/RU) technical communication. Apply to: agent output, system prompts, documentation, UI copy, commit messages, runbooks, translations.
+Apply these rules to English and Russian prose:
 
-simple-lang does not work alone. It holds the cross-lingual layer: invariants, translation parity, injection blocks. The full language rules live in two sibling skills:
-- `simple-english` — shared directives D1–D11 plus English-only directives E1–E3.
-- `simple-russian` — shared directives D1–D11 plus Russian-only directives R1–R5.
+- Documentation, runbooks, and instructions
+- UI text and error messages
+- Commit messages, Jira comments, and chat replies
+- Prompts and translations
 
-A shared ID (D1–D11) means the same rule in both language skills. E- and R-directives cover features of one language only. Cite every violation by its ID.
+Code style rules govern code. Do not apply these rules to marketing, pitch, or creative copy. If the user asks, apply them to this copy too.
 
-**Rule of use:** Load this skill before you write, review, or translate technical text. Then run Section 0. All sub-rules below are mandatory unless a language-specific rule overrides them.
+Only this file states rules and limits. `references/` holds examples, word lists, full passages, rationale, the translation procedure with the parity contract (`translation.md`), and a derived copy of this file (`injection-block.md`). No reference changes a rule.
 
----
+Shared directives D1–D12 mean the same rule in both languages. E1–E3 apply to English text only. R1–R5 apply to Russian text only. Cite every violation by its ID. If a phrase matches a D-rule and an E- or R-rule, cite the D-rule.
 
-## 0. Loading Protocol
+## Routing
 
-Run this protocol before you write, review, or translate text.
-
-1. Identify the language of each text that you write, review, or translate.
-2. Load the language skills that the task needs:
-
-| Task | Load |
+| Task | Read before you start |
 |---|---|
-| English text only | `simple-english` |
-| Russian text only | `simple-russian` |
-| Text in both languages, or translation EN ↔ RU | `simple-english` and `simple-russian` |
-| Copy a Section 3 injection block verbatim | Nothing |
+| Write a short text (chat reply, Jira comment, Slack message) | Nothing more. This file is enough. |
+| Write a long or publishable document (runbook, Confluence page, README) | `references/english.md` and/or `references/russian.md`, one for each language in the document |
+| Review or rewrite English text | `references/english.md` |
+| Review or rewrite Russian text | `references/russian.md` |
+| Translate EN ↔ RU | `references/translation.md` and the reference of the target language |
+| Check a document that has EN and RU versions of the same content | `references/translation.md`, `references/english.md`, and `references/russian.md` |
+| Add the always-on protocol to CLAUDE.md or AGENTS.md | `references/injection-block.md` |
 
-3. Load each skill once per session. If a later text is in the other language, load the second skill at that point.
-4. Use the load method of your harness:
-   - Claude Code: call the Skill tool with the skill name.
-   - Other agents: read `../simple-english/SKILL.md` or `../simple-russian/SKILL.md` relative to this file.
-5. If a language skill is not available, tell the user: "simple-lang requires simple-english and simple-russian. Install: `npx skills add samkrew/simple-lang-skill`." Then use Section 1 as the fallback. Mark the result as a partial check.
+Before a review, a rewrite, or a translation, make sure that each reference that the table names for your task is in your context. If a reference is missing or incomplete, read it again. For a full rewrite of a long text, `references/passages.md` shows complete before/after passages.
 
-Precedence: Section 2 invariants > loaded language skill > Section 1 summary.
+## Priority of rules
 
----
+1. **Accuracy.** Never delete necessary technical information to make text shorter. If a rule conflicts with accuracy, restructure the sentence to keep the fact. If the source is ambiguous or incomplete, list the gap as an open question. Do not invent a value, a condition, or a step.
+2. **Clarity.** One sentence, one idea. One word, one meaning.
+3. **Brevity.** Delete words that carry no information. Stop when the text is unambiguous, not when it is shortest.
 
-## 1. The Dual-Core Doctrine
+Precedence: accuracy (with D12) > hard limits > D-rules > E- and R-rules. E- and R-rules add language detail to the D-rules. They never relax them. An exception in a directive also applies to the hard limit of that directive. If a hard limit conflicts with another rule, split the sentence to keep the content.
 
-Summary of the two language skills. Use it for orientation and as the fallback from Section 0, step 5. The full rules are in `simple-english` and `simple-russian`.
+## Hard limits
 
-Two national styles. One discipline. Each core governs its language. The invariants (Section 2) govern both.
-
-### 1.1 English Core — ASD-STE100 / Plain Technical English
-
-| Rule | Requirement |
-|---|---|
-| Sentence length | ≤ 20 words per procedural instruction. ≤ 25 words per descriptive sentence. |
-| Voice | Active voice. Named agent performs a named action. Passive only in descriptions, when the agent is unknown or unimportant. Never in instructions. |
-| Mood | Imperative for all procedures: "Remove the bolt." Not: "The bolt should be removed." |
-| Vocabulary | Controlled: one word = one meaning. Use "start", not "initiate/commence/kick off". |
-| Verb forms | Simple tenses only. No gerund chains, no perfect continuous. No phrasal verbs (E2). |
-| Paragraphs | ≤ 6 sentences. One topic per paragraph. |
-| Noun clusters | ≤ 3 nouns in a row. Break longer clusters with prepositions. |
-| Articles | Keep articles ("the", "a"). Telegraphic style is prohibited. |
-
-**Approved verb pattern:** `<Verb> <object> <condition>.`
-- ✅ "Stop the service before you edit the config."
-- ❌ "It is recommended that the service be stopped prior to the modification of the configuration."
-
-### 1.2 Russian Core — Информационный стиль (Простой русский)
-
-| Правило | Требование |
-|---|---|
-| Длина фразы | ≤ 15 слов на инструкцию. ≤ 20 слов на описательное предложение. |
-| Залог | Действительный залог. Субъект действует. "Скрипт удаляет файл", не "файл удаляется скриптом". Страдательный — только в описании, если деятель неизвестен или не важен, не чаще раза на абзац. В инструкциях — никогда. |
-| Порядок слов | Прямой: подлежащее → сказуемое → дополнение. «Скрипт создаёт файл», не «Скриптом создаётся файл». |
-| Глаголы | Глаголы действия вместо отглагольных существительных: "проверить", не "осуществить проверку". |
-| Канцелярит | Запрещён: «осуществлять», «производить», «данный», «является», «в рамках», «в целях», «имеет место». |
-| Родительный падеж | ≤ 2 звена в цепочке. "Настройка прав доступа сервера базы данных отдела" — переписать. |
-| Наклонение | Повелительное для процедур: «Остановите сервис». Не: «Необходимо остановить сервис». |
-| Вводные слова | Удалить: «следует отметить», «как известно», «в целом», «по сути». |
-| Оценки | Факты вместо оценок: «ответ за 40 мс», не «быстрый ответ». |
-| Деепричастия и вид | В инструкциях без деепричастных оборотов (R4). Совершенный вид в разовых командах: «Откройте», не «Открывайте» (R5). |
-
-**Шаблон инструкции:** `<Глагол> <объект> <условие>.`
-- ✅ «Остановите сервис перед правкой конфига.»
-- ❌ «Перед осуществлением модификации конфигурационного файла необходимо произвести остановку сервиса.»
-
-### 1.3 Core Priority
-
-When the two cores conflict on a shared document, the language of the target sentence wins. When a core conflicts with an invariant, the invariant wins.
-
----
-
-## 2. Universal Cross-Lingual Invariants
-
-These rules apply to both languages, always.
-
-### 2.1 Zero Conversational Filler (Universal Stop-Words) — D6
-
-Delete on sight. Never generate.
-
-| English (prohibited) | Русский (запрещено) |
-|---|---|
-| Certainly! / Sure! / Great question! | Конечно! / Отличный вопрос! |
-| I'd be happy to… | С радостью помогу… |
-| Let's dive in / Let's explore | Давайте разберёмся / Погрузимся |
-| It's worth noting that… | Стоит отметить, что… |
-| Basically / Actually / Simply | По сути / На самом деле / Просто |
-| As you can see | Как видите |
-| Hope this helps! | Надеюсь, это поможет! |
-| In order to → to | Для того чтобы → чтобы |
-| Please note that… | Обратите внимание, что… |
-
-Rule: if deleting the phrase does not change the meaning, delete the phrase.
-
-### 2.2 Direct Imperative for Procedures — D1
-
-Every procedural step = one imperative verb, second person, no modal hedging.
-- EN: "Run the migration." Not: "You might want to consider running the migration."
-- RU: «Запустите миграцию.» Не: «Можно было бы запустить миграцию.»
-
-If a step is optional, mark it explicitly. Do not use modals for this.
-- EN: "Optional: enable the cache."
-- RU: «Необязательно: включите кэш.»
-
-### 2.3 Warnings Before Actions — D9
-
-Place warnings, cautions, and preconditions **before** the instruction they protect. Never after.
-
-- ✅ EN: "**WARNING:** This deletes all data. Run `db:reset`."
-- ✅ RU: «**ОСТОРОЖНО:** команда удаляет все данные. Запустите `db:reset`.»
-- ❌ "Run `db:reset`. Note: this deletes all data."
-
-Severity levels (the same in all three skills):
-
-| Level | EN | RU | Use for |
+| Parameter | English | Russian | ID |
 |---|---|---|---|
-| 1 | `WARNING` | `ОСТОРОЖНО` | Risk of injury, loss of data, money, or access, or a security breach |
-| 2 | `CAUTION` | `ВНИМАНИЕ` | Risk of failure, downtime, degradation, or extra work |
-| 3 | `NOTE` | `ПРИМЕЧАНИЕ` | Useful context without risk |
+| Instruction sentence | ≤ 20 words | ≤ 15 words | D4 |
+| Descriptive sentence | ≤ 25 words | ≤ 20 words | D4 |
+| Ideas per sentence | 1 | 1 | D4 |
+| Actions per instruction sentence | 1, or 2 that you cannot separate | 1, or 2 that you cannot separate | D4 |
+| Paragraph | ≤ 6 sentences | ≤ 6 sentences | D4 |
+| Conditions per sentence | 1 | 1 | D5 |
+| List nesting | ≤ 2 levels | ≤ 2 levels | D10 |
+| Nouns in a row (noun cluster) | ≤ 3 | — | E1 |
+| Genitive nouns in a row after the head word | — | ≤ 2 | R2 |
 
-Never put risk information in a `NOTE` / `ПРИМЕЧАНИЕ`.
+Counting: a number with its unit, a code span, a path, a URL, and a hyphenated word each count as one word. A product name counts as one noun (E1). If the first noun of a compound term alone means something else («база» in «база данных»), the term counts as one noun (R2). Otherwise, count each noun: «пул соединений» and «журнал ошибок» are two nouns.
 
-### 2.4 Data and Facts Over Adjectives — D8
+A limit violation is a defect, like a failing test.
 
-Replace every evaluative adjective with a measurement or delete it.
+## Enforcement
 
-| Prohibited | Required |
+- **Write:** apply the rules while you write, not after.
+- **Review:** quote each violating sentence. Name the ID. Give a BAD → GOOD pair.
+- **Rewrite:** keep all facts and the modality of the source. Do not add a fact, a value, a condition, or a step that the source does not have. List each gap as an open question.
+- **Verdict:**
+  1. If a parity item fails in a document with EN and RU versions: BLOCK.
+  2. If any other checklist item fails: REWRITE.
+  3. If all items pass: APPROVE.
+
+The examples in this skill assume that the writer knows the facts. A rewrite of another person's text does not add them.
+
+External style guides (client brand, legal boilerplate) override this skill only when the document header says so.
+
+---
+
+## Shared directives D1–D12
+
+### D1. Imperative for instructions
+
+Write each instruction in the imperative. The command verb starts the main clause. Only these can come before it:
+
+- A condition (D5), or a clause with "before" or "until" / «перед тем как», «пока не».
+- A time, a place, or a scope: "In the Settings window," / «В окне настроек».
+- A purpose clause: "To …" / «Чтобы …».
+- A sequence word: "Then" / «Затем».
+- A label with a colon: "Optional:", "EN:", "RU:", or a D9 label.
+- A negation or a frequency word: "Do not", "Never", "Always" / «Не», «Никогда не», «Всегда».
+
+Do not use words of obligation or advice in instructions:
+
+- EN: "should", "must", "need to", "might want to", "it is necessary", "it is recommended".
+- RU: «следует», «необходимо», «нужно», «должен», «рекомендуется».
+
+- EN: "It is recommended that users restart the service." → "Restart the service."
+- RU: «Пользователю следует ввести токен.» → «Введите токен.»
+
+Mark an optional step explicitly: "Optional: enable the cache." / «Необязательно: включите кэш.»
+
+This rule covers instructions only. A hedge about an uncertain fact stays (D12).
+
+### D2. Active voice
+
+Name the actor of each action.
+
+- EN: "The configuration is loaded by the server." → "The server loads the configuration."
+- RU: «Данные удаляются скриптом.» → «Скрипт удаляет данные.»
+
+Exception for a description. Use passive only when both conditions are true:
+
+- The actor is unknown or unimportant.
+- The passive sentence is shorter than the same sentence in active voice.
+
+Never use passive in an instruction. A participle that names a resulting state is not passive: "Make sure that the valve is closed." / «Убедитесь, что клапан закрыт.»
+
+RU: passive is a verb in «-ся» with passive meaning («файл удаляется») or a short passive participle that names an event («файл удалён скриптом», «настройки будут применены»). In Russian text, use the exception at most once per paragraph.
+
+### D3. Verbs, not nominalizations
+
+Do not hide an action in a noun that needs an empty verb. Marker: an empty verb + a noun that names the action.
+
+- EN markers: "perform", "carry out", "conduct", "make", "provide" + an action noun. "Perform a check of the configuration." → "Check the configuration."
+- RU markers: «произвести», «осуществить», «выполнить», «провести», «обеспечить», «принять» (in either aspect) + a noun that names an action («проверка», «анализ», «решение»). «Произведите проверку конфигурации.» → «Проверьте конфигурацию.»
+
+A verb with an object that is not an action is not a marker: "Run `make build`." / «Выполните `make build`.»
+
+### D4. One idea per sentence, one action per instruction
+
+Split compound instructions into sentences or a list (D10). Do not join sentences with a semicolon. RU: do not end list items with «;».
+
+- EN: "Open the terminal, go to the project root, and run the build." → "1. Open the terminal. 2. Go to the project root. 3. Run the build."
+- RU: «Откройте настройки и включите двухфакторную аутентификацию.» → «Откройте настройки. Затем включите двухфакторную аутентификацию.»
+
+Exception: two actions that you cannot separate physically: "Press and hold the button for 3 s." / «Нажмите и удерживайте кнопку 3 с.»
+
+RU: a деепричастный оборот hides a second action (R4).
+
+### D5. Explicit conditions first
+
+Put the condition before the action. Start it with "If", "When", or "After" / «Если», «Когда», «После того как». One condition per sentence. A clause with "before" or "until" / «перед тем как», «пока не» is not a condition. It can follow the action: "Save the file before you exit."
+
+- EN: "Restart the server if the config changed." → "If the config changed, restart the server."
+- RU: «Перезапустите сервис в случае обнаружения ошибки.» → «Если есть ошибка, перезапустите сервис.»
+
+Do not use vague conditions:
+
+- EN: "as needed", "where applicable", "if necessary", "in most cases".
+- RU: «при необходимости», «по возможности», «где применимо», «в большинстве случаев».
+
+Replace a vague condition with the exact condition. If the source does not give it, do not invent one. In an instruction, mark the step "Optional:" (D1). List the missing condition as an open question.
+
+RU: replace a condition hidden in a prepositional phrase («при наличии», «в случае», «при отсутствии», «при условии») with an «если» clause: «при наличии ошибок» → «если есть ошибки».
+
+### D6. No filler, answer first
+
+Delete every phrase that carries no information. Test: delete the phrase. If the meaning does not change, it was filler.
+
+- Put the answer or the action in the first sentence. Only a warning that protects that action (D9) can come before it. Put the explanation after it.
+- Do not start a sentence with an existential opener: "There is", "There are" / «Существует», «Имеется». Name the actor and the action.
+- Write "to", not "in order to". Write «чтобы», not «для того чтобы».
+- EN: "Please note that you basically just need to run the command." → "Run the command."
+- RU: «Следует отметить, что в настоящее время сервис работает.» → «Сейчас сервис работает.»
+
+Scope: in your own replies, do not use greetings, sign-offs, or apologies. Do not describe yourself or your process: "Let me check", "As an AI" / «Давайте я проверю», «Как языковая модель». When you report your own action, name yourself as the actor: "I deleted the cache." / «Я удалил кэш.» A text in the user's voice (a Slack message, an email) keeps its greeting and its actor.
+
+### D7. One term for one concept
+
+Choose one term for each concept. Use this term in the whole document. Do not use synonyms for variety. Keep the official names of APIs, commands, and products exactly.
+
+- EN: "start", not "initiate", "launch", or "kick off".
+- RU: «запустить», не «стартовать» или «инициировать».
+
+Define each abbreviation at first use. Exception: an abbreviation that the reader uses every day (API, URL, HTTP, ID). If you are not sure, define it.
+
+RU: repetition of a term is correct. The school rule «не повторяйтесь» does not apply to technical text.
+
+RU: write a Russian word, an established loanword in Cyrillic («сервер», «токен», «скрипт»), or the English term in Latin letters. Do not make your own transliteration or a hybrid of an English stem and Russian affixes: «ремедиация» → «устранение», «задеплоить» → «развернуть» or `deploy`, «воркер» → «обработчик». Use one form per document.
+
+### D8. Facts, values, and formats
+
+Replace an evaluative adjective with a measurement, or delete it. If no metric exists, state the fact without the adjective.
+
+- EN: "very fast" → "p95 = 40 ms".
+- RU: «большой файл» → «файл больше 2 ГБ».
+
+Numbers in quantities:
+
+- EN: decimal point. Comma as the thousands separator from 1,000. Space before a unit symbol, no space before %: `2.5 GB`, `1,000 requests`, `200 ms`, `35%`.
+- RU: десятичная запятая. Делите числа от 10 000 пробелом на группы по три цифры. Не делите четырёхзначные числа. Ставьте пробел перед единицей измерения и знаком %: «2,5 ГБ», «10 000 запросов», «1000», «200 мс», «35 %». В вёрстке пробел неразрывный.
+- Identifiers have no separators: ports, years, versions, IDs, and error codes (`port 50051`, `2026`, `v2.10.1`).
+- Code, commands, configs, and logs: copy each value exactly from the source.
+
+Dates: write the month as a word, or use ISO 8601: "9 October 2026" / «9 октября 2026 г.» / `2026-10-09`. Do not write `10/09/2026`.
+
+Quotes: EN "…". RU «…», nested „…“.
+
+Reference code as `path/file.ext:line`. Reference a section by its exact heading.
+
+### D9. Warnings before actions
+
+Put each warning immediately before the step that it protects. If the risk applies to all steps, put the warning before step 1.
+
+| Level | English label | Russian label | Use for |
+|---|---|---|---|
+| 1 | **WARNING:** | **ОСТОРОЖНО:** | Risk of injury, a security breach, or an irreversible loss of data, money, or access |
+| 2 | **CAUTION:** | **ВНИМАНИЕ:** | Risk of failure, downtime, degradation, a recoverable loss, or extra work |
+| 3 | **NOTE:** | **ПРИМЕЧАНИЕ:** | Information without risk |
+
+Write the label in bold capitals with a colon. EN: start the text after the label with a capital letter. RU: start it with a lowercase letter. In a warning, state the risk first. If the source gives an action that prevents the risk, write this action after the risk. Never put a risk or an instruction in a note.
+
+- EN: "Run `db:reset`. Note: this deletes all data." → "**WARNING:** `db:reset` deletes all data. Run `db:reset`."
+- RU: «Выполните `DROP TABLE sessions;`. Внимание: данные удалятся.» → «**ОСТОРОЖНО:** команда необратимо удаляет таблицу `sessions` со всеми данными. Выполните `DROP TABLE sessions;`.»
+
+### D10. Lists and tables
+
+| Content | Format |
 |---|---|
-| "very fast" / «очень быстро» | "p95 = 40 ms" / «p95 = 40 мс» |
-| "significantly improved" / «значительно улучшен» | "latency −35%" / «задержка −35%» |
-| "large file" / «большой файл» | "file > 2 GB" / «файл > 2 ГБ» |
-| "robust solution" / «надёжное решение» | "0 failures in 10 000 runs" / «0 сбоев на 10 000 запусков» |
+| 2 ordered steps | Two sentences. Start the second with "Then" / «Затем». |
+| 3 or more steps | Numbered list |
+| 3 or more items with details (a parameter with a type, a condition with an action) | Bulleted list |
+| Items with 2 or more attributes each | Table |
+| Up to 3 short plain items (1–3 words each) | Inline: "JSON, YAML, and TOML" / «JSON, YAML и TOML» |
+| 4 or more short plain items | Bulleted list |
 
-If no metric exists, state the fact without the adjective.
+Use a numbered list only when order matters. Do not nest lists deeper than the limit. Use a table or a separate section instead. Quoted examples inside a rule or a word list can stay inline.
 
-### 2.5 One Instruction = One Sentence — D4
+### D11. Error messages and UI text
 
-One sentence carries one action. Split compound instructions.
-- ❌ "Stop the service, edit the config, and restart it after you verify the port."
-- ✅ "Stop the service. Edit the config. Verify the port. Restart the service."
+Formula: what happened → why → what to do. Join the first two parts with a colon. Write what to do as an instruction (D1).
 
-Exception: two actions that you cannot separate physically. "Press and hold the button for 3 seconds." / «Нажмите и удерживайте кнопку 3 секунды».
+- EN: "An error occurred." → "Could not save the file: the disk is full. Delete the files that you do not need. Then try again."
+- RU: «Произошла ошибка.» → «Не удалось сохранить файл: диск заполнен. Удалите ненужные файлы. Затем попробуйте снова.»
 
-### 2.6 Structural Invariants — D10, D7
+Buttons and menu items name the action:
 
-- Lists and tables follow D10: 3+ steps → numbered list. 3+ items with details → bulleted list. Items with 2+ attributes each → table. Up to 3 short plain items may stay inline; 4+ → list.
-- Numbered lists only when order matters. List nesting ≤ 2 levels.
-- No sentence starts with "There is/are" or «Существует/Имеется».
-- Terminology is frozen per document: one concept = one term in each language.
+- EN: an imperative verb: "Save", "Retry".
+- RU: инфинитив совершенного вида: «Сохранить», «Повторить». Переключатель настройки — инфинитив несовершенного вида: «Показывать уведомления». Прописная буква — только в первом слове: «Сохранить изменения». Сохраняйте устоявшиеся подписи: «Отмена», «ОК».
 
-### 2.7 Accuracy Before Brevity — Priority of rules
+### D12. Keep modality
 
-Priority order: accuracy > clarity > brevity.
-- Never delete necessary technical information to make a sentence shorter.
-- If a limit conflicts with accuracy, keep the fact and restructure the sentence.
-- If the source is ambiguous, list the ambiguity as an open question. Do not invent a precise value.
+Keep the certainty of the source. A hedge about an uncertain fact is content. Do not turn a hedge into a fact. Do not add a hedge that the source does not have.
 
-### 2.8 Explicit Conditions First — D5
-
-Put the condition before the action. One condition per sentence.
-- EN: "If the config changed, restart the server." Not: "Restart the server if the config changed."
-- RU: «Если в логах есть ошибка, перезапустите сервис.» Не: «Перезапустите сервис в случае обнаружения ошибки.»
-
-Never use vague conditions: "as needed", "where applicable", "if necessary" / «при необходимости», «по возможности», «в случае возникновения». State the exact condition or delete it.
+- EN: "The deploy may have failed because of the migration." Keep it. Do not write "The deploy failed because of the migration."
+- RU: «Развёртывание, возможно, завершилось с ошибкой из-за миграции». Сохраните оговорку. Не пишите «Развёртывание завершилось с ошибкой из-за миграции».
 
 ---
 
-## 3. Agent Persona & System Prompt Injection Snippets
+## English only (E1–E3)
 
-Copy the block verbatim into `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, or a system prompt. Both blocks are semantically identical (parity-checked).
+- **E1. Noun clusters.** Do not put more nouns in a row than the limit. Break a longer cluster with a preposition or a relative clause. Keep each noun that carries information. Example: "database connection pool size parameter" → "the parameter that sets the size of the database connection pool".
+- **E2. Verb forms.**
+  - Use simple present, simple past, and simple future. Do not use continuous forms. Use present perfect only for a state that continues now: "The service has not responded since 10:00." Keep a hedge in its source form: "may have failed" (D12).
+  - Use an -ing form only as a noun or an adjective: "logging", "incoming request". Do not use it as a verb: "after starting the migration" → "after the migration starts".
+  - Use a single-word verb, not a phrasal verb: "start", not "spin up". Exception: an official UI term or a technical verb without a single-word equivalent: "Log in", "Sign up", "back up", "roll back".
+- **E3. Articles and word classes.** Keep the articles ("the", "a"). Do not use contractions: write "do not", not "don't". Exception: UI copy and chat messages. Do not use one word as a verb and as a noun in one sentence.
 
-### 3.1 English Injection Block
+## Только русский (R1–R5)
 
-```text
-## Language Protocol (simple-lang)
-
-- Write in plain technical English (ASD-STE100 profile).
-- Maximum 20 words per instruction. One instruction per sentence.
-- Active voice. Imperative mood for all procedures.
-- Put the condition first: "If X, do Y."
-- Zero conversational filler: no greetings, no "Certainly", no "Hope this helps",
-  no "Let's dive in", no apologies, no self-reference.
-- Place warnings BEFORE the action they protect.
-- State facts and metrics, not adjectives: "40 ms", not "fast".
-- Accuracy first: never delete a necessary fact to make text shorter.
-- One term per concept. Do not vary vocabulary for style.
-- Answer first. Explanation after, only if needed.
-- If the user writes in Russian, apply the Russian protocol
-  (Информационный стиль) with the same rules.
-```
-
-### 3.2 Russian Injection Block
-
-```text
-## Языковой протокол (simple-lang)
-
-- Пишите в информационном стиле (простой русский).
-- Максимум 15 слов на инструкцию. Одна инструкция — одно предложение.
-- Действительный залог. Повелительное наклонение для процедур.
-- Условие — в начале: «Если X, сделайте Y».
-- Ноль разговорного мусора: без приветствий, без «Конечно», без
-  «Надеюсь, это поможет», без «Давайте разберёмся», без извинений.
-- Глаголы действия вместо отглагольных существительных:
-  «проверить», не «осуществить проверку». Канцелярит запрещён.
-- Цепочки родительного падежа — не более двух звеньев.
-- Предупреждение — ПЕРЕД действием, которое оно защищает.
-- Факты и метрики вместо прилагательных: «40 мс», не «быстро».
-- Точность важнее краткости: не удаляйте нужный факт ради сокращения.
-- Один термин на одно понятие. Не варьируйте лексику ради стиля.
-- Сначала ответ. Пояснение — после, только если нужно.
-- Если пользователь пишет на английском, примените английский
-  протокол (ASD-STE100) с теми же правилами.
-```
-
-### 3.3 Injection Rules
-
-1. Insert one block per agent config. Insert both blocks for bilingual agents.
-2. Do not paraphrase the blocks. Paraphrase drifts; verbatim copies audit cleanly.
-3. Place the block near the top of the config: language rules bind all later output.
-4. On update, replace the whole block. Do not patch single lines.
+- **R1. Канцелярит.** Замените штамп одним словом или коротким оборотом. Штампы: «данный», «является», «осуществлять», «в рамках», «с целью», «в целях», «на предмет», «имеет место», «в связи с тем, что», «вышеуказанный», «путём» + существительное. Пример: «в целях проверки» → «чтобы проверить».
+- **R2. Цепочки родительного падежа.** Не ставьте после главного слова подряд больше существительных в родительном падеже, чем разрешает лимит. Главное слово — существительное, от которого зависит первое слово цепочки. Падеж главного слова не важен: в «для проверки конфигурации сервера» их два, а не три. Предлог или глагол разрывает цепочку. Пример: «журнал ошибок обработчика очереди» → «журнал ошибок в обработчике очереди».
+- **R3. Прямой порядок слов.** Подлежащее → сказуемое → дополнение: «Скрипт создаёт файл», а не «Файл создаёт скрипт». Условие (D5), время или место в начале фразы — не нарушение. Бытийная фраза с подлежащим в конце — тоже норма: «В логах есть ошибки».
+- **R4. Деепричастные и причастные обороты.** Не используйте деепричастные обороты в инструкциях: «Открыв файл, проверьте строку 12» → «Откройте файл. Затем проверьте строку 12». В описании деепричастие и сказуемое называют действия одного подлежащего: не пишите «Запустив скрипт, создаётся файл». Замените причастный оборот из трёх и более слов придаточным с «который». Ставьте «который» сразу после слова, к которому он относится. Одиночное причастие и оборот из двух слов допустимы: «настроенный DNS», «созданный скриптом файл».
+- **R5. Вид глагола и форма команды.**
+  1. Разовая команда — совершенный вид: «Откройте файл».
+  2. Повторяющееся действие и запрет — несовершенный вид: «Проверяйте логи каждый день», «Не удаляйте файл».
+  3. Предостережение от случайной ошибки — «не» + совершенный вид: «Не перепутайте порты».
+  4. Команда — повелительное наклонение на «вы»: «Откройте файл». Не пишите команду инфинитивом («Открыть файл»).
+  5. Сохраняйте обращение автора в тексте от имени пользователя: «ты» или «вы». Не смешивайте их в одном тексте.
+  6. Кнопки и пункты меню — по D11.
 
 ---
 
-## 4. Cross-Lingual Translation & Parity Protocol
+## Checklist
 
-Goal: EN and RU versions carry identical meaning, identical structure, identical severity — with each language idiomatic under its own core.
+Cite each failed item by its ID.
 
-### 4.1 Translation Algorithm
-
-1. **Extract the action skeleton.** Reduce the source sentence to `verb + object + condition`.
-2. **Translate the skeleton, not the sentence.** Render the skeleton with the target core's approved verb pattern.
-3. **Re-apply invariants.** Check length limits (instructions: EN ≤ 20 / RU ≤ 15 words; descriptions: EN ≤ 25 / RU ≤ 20 words), imperative mood, condition placement, warning placement and level.
-4. **Verify term map.** Every frozen term maps 1:1 via the document glossary. No synonyms.
-5. **Parity check.** Count instructions, warnings, and metrics in both versions. Counts must match.
-
-### 4.2 Known Translation Traps
-
-| Trap | Wrong | Correct |
-|---|---|---|
-| EN passive → RU passive | "is deleted by" → «удаляется скриптом» | «скрипт удаляет» |
-| RU nominalization → EN nominalization | «выполнение проверки» → "the performing of verification" | "verify" / «проверьте» |
-| EN modal → RU «следует» | "should restart" → «следует перезапустить» | «перезапустите» |
-| RU «необходимо» → EN "it is necessary" | «необходимо остановить» → "it is necessary to stop" | "stop" |
-| Politeness inflation | "please kindly ensure" ↔ «пожалуйста, убедитесь, что» | "confirm" / «убедитесь» |
-| False metric parity | "several seconds" ↔ «несколько секунд» | Same number in both: "≤ 5 s" / «≤ 5 с» |
-
-### 4.3 Parity Contract
-
-A bilingual document passes parity when:
-- Instruction count is equal in both languages.
-- Warning count, severity levels, and placement are equal.
-- Every number, unit, command, and code literal is byte-identical.
-- Neither version contains content absent from the other.
-
-If parity fails, fix the deviant version. Do not "average" the two.
-
----
-
-## 5. Unified Review & Linter Checklist
-
-Run this checklist on every text before delivery. Also run the checklist of each loaded language skill. All items are blocking. Cite each violation by its directive ID (D1–D11, E1–E3, R1–R5).
-
-### 5.1 Structure
-
-- [ ] Answer or action appears in the first sentence.
-- [ ] One instruction per sentence.
-- [ ] EN: instructions ≤ 20 words, descriptions ≤ 25 words. RU: instructions ≤ 15 words, descriptions ≤ 20 words.
-- [ ] Paragraphs ≤ 6 sentences.
-- [ ] Lists and tables follow the D10 thresholds; ordered steps use numbers; nesting ≤ 2 levels.
-- [ ] Conditions come first ("If X, …" / «Если X, …»). No vague conditions (Section 2.8).
-
-### 5.2 Voice and Mood
-
-- [ ] No passive voice in instructions. Passive in descriptions only when the agent is unknown or unimportant.
-- [ ] RU: direct word order (подлежащее → сказуемое → дополнение).
-- [ ] All procedures use the imperative.
-- [ ] No modal hedging: no "should/might/could consider", no «следует/можно было бы/необходимо». Optional steps are marked "Optional:" / «Необязательно:».
-
-### 5.3 Filler and Noise
-
-- [ ] Zero stop-words from Section 2.1.
-- [ ] No greetings, sign-offs, apologies, or self-reference.
-- [ ] No "in order to" / «для того чтобы» — use "to" / «чтобы».
-- [ ] RU: no канцелярит, no отглагольные существительные, genitive chains ≤ 2.
-
-### 5.4 Facts and Safety
-
-- [ ] Every evaluative adjective replaced by a metric or deleted.
-- [ ] All warnings placed before the actions they protect.
-- [ ] Severity labels match the table in Section 2.3 (WARNING/ОСТОРОЖНО > CAUTION/ВНИМАНИЕ > NOTE/ПРИМЕЧАНИЕ).
-- [ ] Numbers, units, commands, and code literals verified against the source.
-- [ ] No necessary technical fact deleted for brevity (Section 2.7).
-
-### 5.5 Terminology and Parity (bilingual documents)
-
-- [ ] One term per concept, per language, per document.
-- [ ] Instruction and warning counts match across languages.
-- [ ] All numeric values byte-identical across languages.
-- [ ] No untranslated leftover content in either version.
-
-### 5.6 Verdicts
-
-| Result | Action |
-|---|---|
-| All items pass | **APPROVE.** Ship the text. |
-| Structure/voice failures | **REWRITE.** Apply Sections 1–2, re-run checklist. |
-| Parity failures | **BLOCK.** Apply Section 4, fix the deviant version. |
-
----
-
-## 6. Scope and Precedence
-
-1. This skill governs prose. Code style rules govern code.
-2. Language-specific rules (Section 1 and the loaded language skills) override invariants only where marked; by default, invariants win.
-3. External style guides (client brand, legal boilerplate) override this skill only with an explicit note in the document header.
-4. When in doubt: accurate first, then shorter, active, imperative, measured.
+- [ ] Hard limits (D4, D5, D10, E1, R2)
+- [ ] D1 imperative, optional steps marked
+- [ ] D2 actor named
+- [ ] D3 no empty verb + action noun
+- [ ] D4 one idea, one action, no semicolons
+- [ ] D5 condition first, exact, not invented
+- [ ] D6 no filler, answer first
+- [ ] D7 one term, abbreviations defined, no RU hybrids
+- [ ] D8 exact values, formats of the language
+- [ ] D9 warning before its step, correct level
+- [ ] D10 list and table thresholds
+- [ ] D11 what happened, why, what to do. Button form
+- [ ] D12 modality unchanged
+- [ ] E1–E3 for English text, R1–R5 for Russian text
+- [ ] Priority of rules, item 1: no fact deleted or invented
+- [ ] Parity contract for a document with EN and RU versions

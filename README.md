@@ -1,175 +1,181 @@
 # simple-lang-skill
 
-> Agent skills that enforce clear, minimal, unambiguous writing — **ASD-STE100** (Simplified Technical English) for English and **Информационный стиль** (Infostyle) for Russian. One doctrine, two languages, zero fluff.
+> One agent skill that enforces clear, minimal, unambiguous writing — rules based on **ASD-STE100** (Simplified Technical English) for English and **информационный стиль** (Infostyle) for Russian. One doctrine, two languages, zero fluff.
 
-![skills](https://img.shields.io/badge/skills-3-blue) ![agents](https://img.shields.io/badge/agents-Claude%20Code%20%7C%20Hermes%20%7C%20Codex%20%7C%20Cursor-8A2BE2) ![license](https://img.shields.io/badge/license-Unlicense-lightgrey)
+![skills](https://img.shields.io/badge/skills-1-blue) ![agents](https://img.shields.io/badge/agents-Claude%20Code%20%7C%20Hermes%20%7C%20Codex%20%7C%20Cursor-8A2BE2) ![license](https://img.shields.io/badge/license-Unlicense-lightgrey)
 
-Compatible with **Claude Code**, **Hermes Agent**, **Codex**, **Cursor**, and human technical documentation workflows. Skills are portable Markdown — no runtime, no dependencies.
+Compatible with **Claude Code**, **Hermes Agent**, **Codex**, **Cursor**, and human technical documentation workflows. The skill is portable Markdown — no runtime, no dependencies.
 
 ---
 
 ## Install
 
-Install the full pack:
+Install for the current project (the default scope). The CLI keeps the copy in `./.agents/skills/` and links it into `./.claude/skills/`:
 
 ```bash
-npx skills add samkrew/simple-lang-skill
+npx skills add samkrew/simple-lang-skill -a claude-code -y
 ```
 
-Install a single skill:
-
-```bash
-npx skills add samkrew/simple-lang-skill --skill simple-english
-npx skills add samkrew/simple-lang-skill --skill simple-russian
-```
-
-`simple-lang` needs both language skills: it loads `simple-english` and `simple-russian` as needed. Do not install `simple-lang` alone — install the full pack.
-
-Install project-local (writes to `./.claude/skills/` instead of `~/.claude/skills/`):
-
-```bash
-npx skills add samkrew/simple-lang-skill -p
-```
-
-CI / non-interactive install (target Claude Code, global, auto-confirm):
+Install globally for Claude Code:
 
 ```bash
 npx skills add samkrew/simple-lang-skill -a claude-code -g -y
 ```
 
-Manual install for **Hermes Agent**:
+Install globally for Codex:
+
+```bash
+npx skills add samkrew/simple-lang-skill -a codex -g -y
+```
+
+With `-g`, the CLI keeps the canonical copy in `~/.agents/skills/`. Codex also reads that folder. Keep one Codex copy: if `~/.codex/skills/simple-lang` also exists, delete one of the two.
+
+Manual install for **Hermes Agent** (copy the whole folder, including `references/`):
 
 ```bash
 git clone https://github.com/samkrew/simple-lang-skill.git /tmp/simple-lang-skill
-cp -r /tmp/simple-lang-skill/skills/* ~/.hermes/skills/
+mkdir -p ~/.hermes/skills
+cp -r /tmp/simple-lang-skill/skills/simple-lang ~/.hermes/skills/
 rm -rf /tmp/simple-lang-skill
 ```
 
 ---
 
-## Catalog
+## Migration from 1.x
 
-| Skill | Language | Purpose |
+Version 2.0.0 replaces the three 1.x skills (`simple-lang` router, `simple-english`, `simple-russian`) with one skill, `simple-lang`.
+
+1. Install 2.0.0 as shown above.
+2. Remove the old `simple-english` and `simple-russian` skills. If you installed them with npx, run `npx skills remove -g simple-english simple-russian`. Otherwise delete the two folders from every skills directory you use (for example `~/.claude/skills/`, `~/.agents/skills/`, `~/.codex/skills/`, `~/.hermes/skills/`). An update can leave removed skills in place. An agent can then load an old skill for a single-language request and apply the 1.x rules.
+3. If you pasted a 1.x snippet into `CLAUDE.md` or `AGENTS.md`, replace it with the block from [`references/injection-block.md`](skills/simple-lang/references/injection-block.md).
+
+What changed in the rules:
+
+- D1–D11 keep their IDs. New: **D12 — keep modality** (a hedge is content).
+- D4 also bans semicolons. D6 adds "answer first" and limits the ban on greetings and apologies to the agent's own replies. D8 adds date, quote, and identifier formats. D11 now covers button labels.
+- E2 permits the present perfect for a state that continues now, and technical verbs such as "back up" and "roll back".
+- Warning labels use one format: bold capitals with a colon (`**WARNING:**`, `**ОСТОРОЖНО:**`).
+- Each rule and each limit is stated once, in `SKILL.md`.
+
+Version 1.3.0 stays available at the tag [`v1.3.0`](https://github.com/samkrew/simple-lang-skill/tree/v1.3.0).
+
+---
+
+## How it works
+
+| File | Loaded | Contents |
 |---|---|---|
-| `simple-lang` | Bilingual | Router and controller. Loads `simple-english` and/or `simple-russian` for the language of the text, then adds the cross-lingual invariants and translation parity. Does not work alone. |
-| `simple-english` | English | Enforces ASD-STE100: one word — one meaning, approved verbs, active voice, short sentences (≤ 20 words for instructions), procedural clarity. |
-| `simple-russian` | Russian | Enforces Информационный стиль: no stop-words, no bureaucratese (канцелярит), active voice, facts over evaluations, verbs over verbal nouns. |
+| `SKILL.md` | When the skill triggers | All rules and limits: priority, hard limits, D1–D12, E1–E3, R1–R5, checklist, routing |
+| `references/english.md` | For English reviews, rewrites, and long documents | Examples, word lists, differences from ASD-STE100 |
+| `references/russian.md` | For Russian reviews, rewrites, and long documents | Примеры и списки слов |
+| `references/passages.md` | For a full rewrite of a long text | Complete before/after passages in both languages |
+| `references/translation.md` | For EN ↔ RU translation and parity checks | Procedure, traps, parity contract |
+| `references/injection-block.md` | When you configure an agent | The always-on block for `CLAUDE.md` / `AGENTS.md` |
+
+Short texts (a chat reply, a Jira comment, a Slack message) need only `SKILL.md`.
 
 ### Directive map
 
-`simple-english` and `simple-russian` share directives D1–D11: the same ID means the same rule in both languages. Each skill adds directives for features of its own language only.
+| ID | Rule | Applies to |
+|---|---|---|
+| D1 | Imperative for instructions | EN + RU |
+| D2 | Active voice | EN + RU |
+| D3 | Verbs, not nominalizations | EN + RU |
+| D4 | One idea per sentence, one action per instruction | EN + RU |
+| D5 | Explicit conditions first | EN + RU |
+| D6 | No filler, answer first | EN + RU |
+| D7 | One term for one concept | EN + RU |
+| D8 | Facts, values, and formats | EN + RU |
+| D9 | Warnings before actions | EN + RU |
+| D10 | Lists and tables | EN + RU |
+| D11 | Error messages and UI text | EN + RU |
+| D12 | Keep modality | EN + RU |
+| E1 | Noun clusters | English only |
+| E2 | Verb forms, no phrasal verbs | English only |
+| E3 | Articles and word classes | English only |
+| R1 | Канцелярит | Russian only |
+| R2 | Genitive chains | Russian only |
+| R3 | Direct word order | Russian only |
+| R4 | Деепричастные и причастные обороты | Russian only |
+| R5 | Verb aspect and command form | Russian only |
 
-| ID | Rule | English | Russian |
-|---|---|---|---|
-| D1 | Imperative for instructions | ✓ | ✓ |
-| D2 | Active voice | ✓ | ✓ |
-| D3 | Verbs, not nominalizations | ✓ | ✓ |
-| D4 | One action per sentence | ✓ | ✓ |
-| D5 | Explicit conditions first | ✓ | ✓ |
-| D6 | No filler | ✓ | ✓ |
-| D7 | One term per concept | ✓ | ✓ |
-| D8 | Facts and exact values | ✓ | ✓ |
-| D9 | Warnings before actions | ✓ | ✓ |
-| D10 | Lists and tables | ✓ | ✓ |
-| D11 | Error messages: what, why, what to do | ✓ | ✓ |
-| E1 | Noun clusters ≤ 3 words | ✓ | — (see R2) |
-| E2 | Simple verb forms, no phrasal verbs | ✓ | — |
-| E3 | Articles, contractions, word classes | ✓ | — |
-| R1 | No bureaucratese (канцелярит) | — | ✓ |
-| R2 | Genitive chains ≤ 2 words | — (see E1) | ✓ |
-| R3 | Direct word order | — | ✓ |
-| R4 | No adverbial participle phrases (деепричастные обороты) in instructions | — | ✓ |
-| R5 | Verb aspect and one command form | — | ✓ |
+The limits and the full wording are in [`SKILL.md`](skills/simple-lang/SKILL.md).
 
 ---
 
 ## Core Doctrine & Philosophy
 
-Both standards attack the same problem: **text that makes the reader work harder than necessary.** They were developed independently — STE for aerospace maintenance manuals, Infostyle (Maxim Ilyakhov, Nora Gal) for Russian editorial practice — and converge on the same principles:
+Both methods attack the same problem: **text that makes the reader work harder than necessary.** STE and Infostyle developed independently. STE comes from aerospace maintenance manuals. Infostyle comes from Russian editorial practice. Its authors, Maxim Ilyakhov and Lyudmila Sarycheva, used ideas from Nora Gal's «Слово живое и мёртвое». Both methods share these principles:
 
-1. **One word — one meaning.** In STE, each approved word has exactly one part of speech and one definition (`follow` means "come after", never "obey"). In Infostyle, a word that can be removed without loss of meaning must be removed.
-2. **Verbs carry the sentence.** Active voice, imperative mood for instructions. Nominalizations (`осуществление`, `implementation of the verification`) are compressed dead verbs — resurrect them (`verify`, `проверить`).
-3. **Short sentences, one idea each.** STE hard limits: **≤ 20 words** per procedural sentence, **≤ 25 words** per descriptive sentence, **≤ 6 sentences** per paragraph. Infostyle limits: **≤ 15 words** per instruction, **≤ 20 words** per descriptive sentence, genitive chains ≤ 2 words. If a sentence needs a second read, split it.
-4. **Facts, not evaluations.** "Fast" is an opinion. "Responds in 40 ms" is a fact. Delete intensifiers (`very`, `крайне`, `максимально`) — they add emphasis by subtracting trust.
-5. **Warnings before actions.** State the caution, then the instruction. Never bury a safety condition after the step that needs it. All three skills use one scale: `WARNING`/`ОСТОРОЖНО` (injury, loss of data, money, or access) > `CAUTION`/`ВНИМАНИЕ` (failure, downtime, extra work) > `NOTE`/`ПРИМЕЧАНИЕ` (context only).
-6. **The reader owes you nothing.** No filler, no throat-clearing, no "as everyone knows". Respect is measured in the reader's saved seconds.
+1. **One word — one meaning.** In STE, an approved word has only the meaning and the part of speech that the dictionary gives (`follow` means "come after", never "obey"). In Infostyle, a word that can be removed without loss of meaning must be removed.
+2. **Verbs carry the sentence.** Active voice, imperative mood for instructions. Nominalizations (`осуществление проверки`, `implementation of the verification`) are compressed dead verbs — resurrect them (`check`, `проверить`).
+3. **Short sentences, one idea each.** Each language has hard limits for sentence and paragraph length.
+4. **Facts, not evaluations.** "Fast" is an opinion. "Responds in 40 ms" is a fact. Intensifiers (`very`, `крайне`, `максимально`) add emphasis by subtracting trust.
+5. **Warnings before actions.** State the risk before the step that needs it.
+6. **Certainty stays as it is.** A hedge is content. "May have failed" never becomes "failed".
+7. **The reader owes you nothing.** No filler, no throat-clearing, no "as everyone knows". Respect is measured in the reader's saved seconds.
 
-**What these skills do NOT do:** they do not dumb text down, strip technical terms, or flatten tone into robotese. Domain terminology is kept. Structure and precision are added. Only noise is removed.
+**What this skill does NOT do:** it does not oversimplify text, delete technical terms, or make the tone robotic. Domain terminology is kept. Structure and precision are added. Only noise is removed. It is not for marketing, pitch, or creative copy.
 
 ---
 
 ## Cheatsheet
 
-### English (ASD-STE100)
+### English (based on ASD-STE100)
 
 | ❌ BAD | ✅ GOOD | Rule |
 |---|---|---|
-| The removal of the panel should be carried out by maintenance personnel. | Remove the panel. | Active voice, imperative, no nominalization |
-| It is important to ensure that the valve is in the closed position prior to commencement of the test. | Close the valve before you start the test. | Approved words, ≤ 20 words |
-| The system may possibly experience intermittent failures under certain conditions. | The system can fail when the temperature is more than 70 °C. | Facts, not hedging |
-| Follow the safety instructions. | Obey the safety instructions. | `follow` = "come after" only |
-| Turn off the power. Warning: high voltage. | **WARNING: HIGH VOLTAGE.** Turn off the power. | Warning before action |
-| Utilize the appropriate fastening components. | Use the correct bolts. | Simple approved verbs, concrete nouns |
+| The removal of the panel should be carried out by maintenance personnel. | Remove the panel. | D1, D2, D3 |
+| It is important to ensure that the valve is in the closed position prior to commencement of the test. | Before you start the test, close the valve. | D3, D6, D7 |
+| The system may possibly experience intermittent failures under certain conditions. | When the temperature is above 70 °C, the system may fail intermittently. | D5, D12 |
+| Follow the safety instructions. | Obey the safety instructions. | D7: `follow` = "come after" only |
+| Remove the cover. Note: high voltage. | **WARNING:** The terminals under the cover are at 400 V. Disconnect the power. Then remove the cover. | D9 |
+| Utilize the appropriate fastening components. | Use the specified fasteners. | D7, D8 |
 
-### Русский (Информационный стиль)
+### Русский (информационный стиль)
 
 | ❌ ПЛОХО | ✅ ХОРОШО | Правило |
 |---|---|---|
-| Осуществляется процесс обработки данных. | Сервис обрабатывает данные. | Глагол вместо отглагольного существительного |
-| Данный функционал является крайне важным для пользователей. | Функция нужна пользователям: без неё нельзя выгрузить отчёт. | Факт вместо оценки |
-| В связи с тем, что произошёл сбой, было принято решение о перезапуске. | Сервер сбоил, поэтому мы его перезапустили. | Убрать канцелярит, назвать деятеля |
-| Следует отметить, что настройка производится достаточно просто. | Настройка занимает две минуты: заполните три поля. | Убрать вводные, дать измеримое |
-| Не забудьте произвести сохранение изменений. | Сохраните изменения. | Императив, минус стоп-слова |
-| Наша команда высококвалифицированных специалистов оказывает полный спектр услуг. | Мы настраиваем CI/CD за неделю. Список услуг — ниже. | Конкретика вместо самопохвалы |
+| Осуществляется процесс обработки данных. | Сервис обрабатывает данные. | D2, D3, R1 |
+| Данный функционал является крайне важным для пользователей. | Функция нужна пользователям: без неё нельзя выгрузить отчёт. | D8, R1 |
+| В связи с тем, что произошёл сбой, было принято решение о перезапуске. | Из-за сбоя мы решили перезапустить сервер. | D2, D3, R1 |
+| Следует отметить, что настройка производится достаточно просто. | Настройка занимает две минуты: заполните три поля. | D2, D6, D8 |
+| Не забудьте произвести сохранение изменений. | Сохраните изменения. | D1, D3 |
+| Открыв файл, проверьте строку 12. | Откройте файл. Затем проверьте строку 12. | R4 |
+
+The GOOD versions assume that the writer knows the facts. A rewrite of another person's text does not add facts.
 
 ---
 
-## Agent System Prompt Snippets
+## Always-on protocol
 
-Paste into `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, or any agent system prompt.
+A skill loads only when a task triggers it. To apply the style to every reply, paste the block from [`references/injection-block.md`](skills/simple-lang/references/injection-block.md) into `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, or a system prompt.
 
-### English (STE mode)
+---
 
-```text
-## Language Protocol (simple-lang)
+## Skill maintenance
 
-- Write in plain technical English (ASD-STE100 profile).
-- Maximum 20 words per instruction. One instruction per sentence.
-- Active voice. Imperative mood for all procedures.
-- Put the condition first: "If X, do Y."
-- Zero conversational filler: no greetings, no "Certainly", no "Hope this helps",
-  no "Let's dive in", no apologies, no self-reference.
-- Place warnings BEFORE the action they protect.
-- State facts and metrics, not adjectives: "40 ms", not "fast".
-- Accuracy first: never delete a necessary fact to make text shorter.
-- One term per concept. Do not vary vocabulary for style.
-- Answer first. Explanation after, only if needed.
-- If the user writes in Russian, apply the Russian protocol
-  (Информационный стиль) with the same rules.
-```
+- State each rule and each limit once, in `SKILL.md`. The files in `references/` hold examples, word lists, full passages, rationale, the translation procedure, and the derived always-on block.
+- Before a release, check that no limit leaked into the references. Only `injection-block.md` (a derived copy) may match:
 
-### Русский (Инфостиль)
+  ```bash
+  grep -niE '≤ ?[0-9]+ ?(words|слов|nouns|sentences|предложений)|at most|не больше|не чаще' skills/simple-lang/references/*.md
+  ```
 
-```text
-## Языковой протокол (simple-lang)
+- Keep each reference at or below 16 KB, so that agents can restore it after a context compaction. This command must print nothing:
 
-- Пишите в информационном стиле (простой русский).
-- Максимум 15 слов на инструкцию. Одна инструкция — одно предложение.
-- Действительный залог. Повелительное наклонение для процедур.
-- Условие — в начале: «Если X, сделайте Y».
-- Ноль разговорного мусора: без приветствий, без «Конечно», без
-  «Надеюсь, это поможет», без «Давайте разберёмся», без извинений.
-- Глаголы действия вместо отглагольных существительных:
-  «проверить», не «осуществить проверку». Канцелярит запрещён.
-- Цепочки родительного падежа — не более двух звеньев.
-- Предупреждение — ПЕРЕД действием, которое оно защищает.
-- Факты и метрики вместо прилагательных: «40 мс», не «быстро».
-- Точность важнее краткости: не удаляйте нужный факт ради сокращения.
-- Один термин на одно понятие. Не варьируйте лексику ради стиля.
-- Сначала ответ. Пояснение — после, только если нужно.
-- Если пользователь пишет на английском, примените английский
-  протокол (ASD-STE100) с теми же правилами.
-```
+  ```bash
+  find skills/simple-lang/references -name '*.md' -size +16384c
+  ```
+
+- Keep the body of `SKILL.md` (without the frontmatter) below 19,900 characters. Claude Code re-attaches at most about 20,000 characters of a skill after a context compaction:
+
+  ```bash
+  awk 'n>=2; /^---$/{n++}' skills/simple-lang/SKILL.md | wc -m
+  ```
+
+- After each change to `SKILL.md`, update `references/injection-block.md`.
+- Keep `references/*.md` one level deep. Never name a reference file `SKILL.md`: some agents register every `SKILL.md` as a separate skill.
 
 ---
 
@@ -178,11 +184,16 @@ Paste into `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, or any agent system prompt.
 ```
 simple-lang-skill/
 ├── skills/
-│   ├── simple-lang/SKILL.md       # bilingual router & meta-controller
-│   ├── simple-english/SKILL.md    # ASD-STE100 rules & directives
-│   └── simple-russian/SKILL.md    # информационный стиль rules & directives
+│   └── simple-lang/
+│       ├── SKILL.md                    # all rules and limits (EN + RU)
+│       └── references/
+│           ├── english.md              # English examples, word lists, STE differences
+│           ├── russian.md              # Russian examples and word lists
+│           ├── passages.md             # full before/after passages (EN + RU)
+│           ├── translation.md          # EN ↔ RU procedure and parity contract
+│           └── injection-block.md      # always-on block for CLAUDE.md / AGENTS.md
 ├── .claude-plugin/
-│   └── plugin.json                # Claude Code plugin manifest
+│   └── plugin.json                     # Claude Code plugin manifest
 ├── README.md
 ├── LICENSE
 └── .gitignore

@@ -1,7 +1,7 @@
 {
   "name": "simple-lang-skill",
-  "version": "1.3.0",
-  "description": "ASD-STE100 (Simplified Technical English) and Информационный стиль (Infostyle) skills for Claude Code and agent harnesses",
+  "version": "2.0.0",
+  "description": "One skill for plain technical English based on ASD-STE100 and plain Russian (информационный стиль): shared rules D1–D12, English-only E1–E3, Russian-only R1–R5, EN↔RU parity. For Claude Code, Codex, Hermes Agent, and other agent harnesses.",
   "author": {
     "name": "Sam Krew",
     "url": "https://github.com/samkrew"
